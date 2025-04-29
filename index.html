@@ -1,120 +1,128 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>BOMBILA</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BOMBILA – Заказ такси</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       margin: 0;
       padding: 0;
-      background-color: #f4f4f4;
       font-family: Arial, sans-serif;
+      background: #f3f3f3;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
 
     .container {
-      max-width: 500px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    input, select, button {
       width: 100%;
-      padding: 14px;
-      margin: 10px 0;
-      border-radius: 10px;
-      border: 1px solid #ccc;
+      max-width: 400px;
+      padding: 20px;
+      background-color: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      font-size: 24px;
+      color: #222;
+    }
+
+    select,
+    input,
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
       font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
     }
 
     button {
-      background-color: #ffd600;
+      background-color: #facc15;
+      color: #000;
       font-weight: bold;
       border: none;
       cursor: pointer;
+      transition: background 0.3s;
     }
 
     button:hover {
-      background-color: #ffc400;
+      background-color: #fbbf24;
     }
   </style>
 </head>
 <body>
+  <div class="container">
+    <h1>BOMBILA</h1>
+    <form id="orderForm">
+      <select id="city" required>
+        <option value="">Выберите город</option>
+        <option value="Пусан">Пусан</option>
+        <option value="Сеул">Сеул</option>
+        <option value="Инчон">Инчон</option>
+        <option value="Ансан">Ансан</option>
+        <option value="Паран">Паран</option>
+        <option value="Кванджу Бол.">Кванджу Бол.</option>
+        <option value="Кенджу">Кенджу</option>
+        <option value="Чонан">Чонан</option>
+        <option value="Пентек">Пентек</option>
+        <option value="Тэгу">Тэгу</option>
+        <option value="Чхонджу">Чхонджу</option>
+        <option value="Ансонг">Ансонг</option>
+      </select>
+      <input type="text" id="from" placeholder="Откуда (улица, район)" required />
+      <input type="text" id="to" placeholder="Куда (адрес назначения)" required />
+      <input type="text" id="price" placeholder="Стоимость поездки" required />
+      <button type="button" onclick="sendGeo()">Отправить геолокацию</button>
+      <button type="submit">Отправить заказ</button>
+    </form>
+  </div>
 
-<div class="container">
-  <h2>BOMBILA</h2>
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
 
-  <select id="city">
-    <option value="">Выберите город</option>
-    <option>Сеул</option>
-    <option>Пусан</option>
-    <option>Инчон</option>
-    <option>Ансан</option>
-    <option>Тэгу</option>
-    <option>Паран</option>
-    <option>Кванджу Бол.</option>
-    <option>Кенджу</option>
-    <option>Чонан</option>
-    <option>Пентек</option>
-    <option>Чхонджу</option>
-    <option>Ансонг</option>
-  </select>
+    let geo = null;
 
-  <input type="text" id="pickup" placeholder="Откуда (улица, район)">
-  <input type="text" id="destination" placeholder="Куда (адрес назначения)">
-  <input type="number" id="price" placeholder="Стоимость поездки">
-  <button onclick="getLocation()">Отправить геолокацию</button>
-  <button onclick="sendData()">Отправить заказ</button>
-</div>
-
-<script>
-  let userLocation = null;
-
-  function getLocation() {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        userLocation = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude
-        };
-        alert("Геолокация добавлена!");
-      }, () => {
-        alert("Не удалось получить геолокацию.");
-      });
-    } else {
-      alert("Геолокация не поддерживается вашим устройством.");
-    }
-  }
-
-  function sendData() {
-    const city = document.getElementById("city").value;
-    const pickup = document.getElementById("pickup").value;
-    const destination = document.getElementById("destination").value;
-    const price = document.getElementById("price").value;
-
-    if (!city || !pickup || !destination || !price) {
-      alert("Пожалуйста, заполните все поля.");
-      return;
+    function sendGeo() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            geo = {
+              lat: position.coords.latitude,
+              lon: position.coords.longitude
+            };
+            alert("Геолокация получена!");
+          },
+          () => {
+            alert("Ошибка при получении геолокации.");
+          }
+        );
+      } else {
+        alert("Геолокация не поддерживается.");
+      }
     }
 
-    const data = {
-      city: city,
-      pickup: pickup,
-      destination: destination,
-      price: price,
-      location: userLocation
-    };
-
-    Telegram.WebApp.sendData(JSON.stringify(data));
-    Telegram.WebApp.close();
-  }
-</script>
-
+    document.getElementById("orderForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const data = {
+        city: document.getElementById("city").value,
+        from: document.getElementById("from").value,
+        to: document.getElementById("to").value,
+        price: document.getElementById("price").value,
+        location: geo
+      };
+      tg.sendData(JSON.stringify(data));
+      tg.close();
+    });
+  </script>
 </body>
 </html>
