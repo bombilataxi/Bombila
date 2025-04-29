@@ -1,0 +1,103 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>BOMBILA - Заказ такси</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: url('https://images.unsplash.com/photo-1589712183930-1a6b44cc979d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80') no-repeat center center fixed;
+      background-size: cover;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 30px;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+      text-align: center;
+    }
+    h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+    select, input, button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+    select, input {
+      background: #f1f1f1;
+    }
+    button {
+      background-color: #ffcc00;
+      color: #333;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background-color: #e6b800;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>BOMBILA</h2>
+
+  <select id="city">
+    <option value="">Выберите город</option>
+    <option>Ансан</option>
+    <option>Паран</option>
+    <option>Сеул</option>
+    <option>Пусан</option>
+    <option>Кванджу Бол.</option>
+    <option>Кенджу</option>
+    <option>Чонан</option>
+    <option>Пентек</option>
+    <option>Тэгу</option>
+    <option>Чхонджу</option>
+    <option>Инчон</option>
+    <option>Ансонг</option>
+  </select>
+
+  <input type="text" id="pickup" placeholder="Введите место посадки">
+
+  <button onclick="sendData()">Отправить заказ</button>
+</div>
+
+<script>
+  function sendData() {
+    const city = document.getElementById("city").value;
+    const pickup = document.getElementById("pickup").value;
+
+    if (!city || !pickup) {
+      alert("Пожалуйста, заполните все поля!");
+      return;
+    }
+
+    const data = {
+      city: city,
+      pickup: pickup
+    };
+
+    Telegram.WebApp.sendData(JSON.stringify(data));
+    Telegram.WebApp.close();
+  }
+</script>
+
+</body>
+</html>
