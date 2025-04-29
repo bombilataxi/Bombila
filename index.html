@@ -2,48 +2,46 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>BOMBILA - Заказ такси</title>
+  <title>BOMBILA</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       margin: 0;
       padding: 0;
-      background-color: #f8f4ec;
-      font-family: 'Arial', sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+      background-color: #f4f4f4;
+      font-family: Arial, sans-serif;
     }
+
     .container {
-      background: white;
-      width: 90%;
       max-width: 500px;
+      margin: 0 auto;
       padding: 20px;
-      border-radius: 20px;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
     }
+
     h2 {
       text-align: center;
       margin-bottom: 20px;
     }
+
     input, select, button {
       width: 100%;
-      padding: 15px;
+      padding: 14px;
       margin: 10px 0;
-      border: 1px solid #ccc;
       border-radius: 10px;
+      border: 1px solid #ccc;
       font-size: 16px;
     }
+
     button {
-      background-color: #ffd633;
-      color: #333;
+      background-color: #ffd600;
       font-weight: bold;
+      border: none;
       cursor: pointer;
     }
+
     button:hover {
-      background-color: #ffcc00;
+      background-color: #ffc400;
     }
   </style>
 </head>
@@ -54,28 +52,46 @@
 
   <select id="city">
     <option value="">Выберите город</option>
-    <option>Ансан</option>
-    <option>Паран</option>
     <option>Сеул</option>
     <option>Пусан</option>
+    <option>Инчон</option>
+    <option>Ансан</option>
+    <option>Тэгу</option>
+    <option>Паран</option>
     <option>Кванджу Бол.</option>
     <option>Кенджу</option>
     <option>Чонан</option>
     <option>Пентек</option>
-    <option>Тэгу</option>
     <option>Чхонджу</option>
-    <option>Инчон</option>
     <option>Ансонг</option>
   </select>
 
-  <input type="text" id="pickup" placeholder="Введите место посадки">
-  <input type="text" id="destination" placeholder="Введите место назначения">
-  <input type="number" id="price" placeholder="Введите стоимость поездки">
-
+  <input type="text" id="pickup" placeholder="Откуда (улица, район)">
+  <input type="text" id="destination" placeholder="Куда (адрес назначения)">
+  <input type="number" id="price" placeholder="Стоимость поездки">
+  <button onclick="getLocation()">Отправить геолокацию</button>
   <button onclick="sendData()">Отправить заказ</button>
 </div>
 
 <script>
+  let userLocation = null;
+
+  function getLocation() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        userLocation = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        };
+        alert("Геолокация добавлена!");
+      }, () => {
+        alert("Не удалось получить геолокацию.");
+      });
+    } else {
+      alert("Геолокация не поддерживается вашим устройством.");
+    }
+  }
+
   function sendData() {
     const city = document.getElementById("city").value;
     const pickup = document.getElementById("pickup").value;
@@ -83,7 +99,7 @@
     const price = document.getElementById("price").value;
 
     if (!city || !pickup || !destination || !price) {
-      alert("Пожалуйста, заполните все поля!");
+      alert("Пожалуйста, заполните все поля.");
       return;
     }
 
@@ -91,7 +107,8 @@
       city: city,
       pickup: pickup,
       destination: destination,
-      price: price
+      price: price,
+      location: userLocation
     };
 
     Telegram.WebApp.sendData(JSON.stringify(data));
