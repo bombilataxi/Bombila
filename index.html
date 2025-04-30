@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Заказ такси — Bombila</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <title>BOMBILA — Заказ такси</title>
   <style>
     body {
       margin: 0;
@@ -24,11 +23,6 @@
       width: 100%;
       max-width: 400px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      animation: fadein 0.4s ease;
-    }
-    @keyframes fadein {
-      from { opacity: 0; transform: translateY(30px); }
-      to   { opacity: 1; transform: translateY(0); }
     }
     h1 {
       text-align: center;
@@ -50,27 +44,33 @@
       font-weight: bold;
       border: none;
       cursor: pointer;
-      transition: transform 0.1s;
-    }
-    button:active {
-      transform: scale(0.97);
     }
     .message {
       text-align: center;
       font-size: 16px;
       font-weight: bold;
       color: green;
-      margin-top: -5px;
-      margin-bottom: 10px;
+      margin: 10px 0;
+    }
+    .footer-link {
+      text-align: center;
+      margin-top: 15px;
+    }
+    .footer-link a {
+      text-decoration: none;
+      color: #007aff;
+      font-size: 14px;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Bombila</h1>
+    <h1>BOMBILA</h1>
     <form id="orderForm">
       <select id="city" required>
         <option value="" disabled selected>Выберите город</option>
+        <option>асан</option>
+        <option>осан</option>
         <option>сеул</option>
         <option>пусан</option>
         <option>инчон</option>
@@ -83,8 +83,6 @@
         <option>тэгу</option>
         <option>чхонджу</option>
         <option>кванджу- б</option>
-        <option>асан</option>
-        <option>осан</option>
       </select>
       <input type="text" id="from" placeholder="Откуда (улица, район)" required />
       <input type="text" id="to" placeholder="Куда (адрес назначения)" required />
@@ -94,11 +92,12 @@
       <button type="submit">Отправить заказ</button>
       <div id="confirmMessage" class="message" style="display:none;">Заказ отправлен!</div>
     </form>
+    <div class="footer-link">
+      <a href="https://t.me/taxi_orders" target="_blank">Стать водителем</a>
+    </div>
   </div>
 
   <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
     let geo = null;
 
     function getGeo() {
@@ -119,6 +118,7 @@
 
     document.getElementById("orderForm").addEventListener("submit", function (e) {
       e.preventDefault();
+
       const data = {
         city: document.getElementById("city").value,
         pickup: document.getElementById("from").value,
@@ -126,11 +126,26 @@
         price: document.getElementById("price").value,
         location: geo
       };
-      console.log("Отправка данных в Telegram:", data);
-      alert("Данные отправлены в Telegram. Проверьте бот.");
-      tg.sendData(JSON.stringify(data));
-      document.getElementById("confirmMessage").style.display = "block";
-      setTimeout(() => tg.close(), 2000);
+
+      fetch("https://api.telegram.org/bot7976486101:AAGnlLZT_QYaD62AErfwvAtgjJLf3sKmLqY/sendMessage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: "-1002604421543",
+          text: `🚖 Новый заказ\nГород: ${data.city}\nОткуда: ${data.pickup}\nКуда: ${data.destination}\nЦена: ${data.price}₩` +
+                (data.location ? `\n[Геолокация](https://maps.google.com/?q=${data.location.latitude},${data.location.longitude})` : ""),
+          parse_mode: "Markdown"
+        })
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.ok) {
+          document.getElementById("confirmMessage").style.display = "block";
+          setTimeout(() => location.reload(), 2000);
+        } else {
+          alert("Ошибка при отправке заказа");
+        }
+      });
     });
   </script>
 </body>
