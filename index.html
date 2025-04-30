@@ -25,14 +25,18 @@
       max-width: 400px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
       animation: fadein 0.4s ease;
-      text-align: center;
     }
     @keyframes fadein {
       from { opacity: 0; transform: translateY(30px); }
       to   { opacity: 1; transform: translateY(0); }
     }
     h1 {
-      margin-bottom: 20px;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    h1 img {
+      max-width: 100px;
+      border-radius: 50%;
     }
     select, input, button {
       width: 100%;
@@ -43,12 +47,9 @@
       border: 1px solid #ccc;
       box-sizing: border-box;
     }
-    select {
-      font-weight: bold;
-    }
     button {
-      background-color: #007bff;
-      color: white;
+      background-color: #ffd600;
+      color: #000;
       font-weight: bold;
       border: none;
       cursor: pointer;
@@ -67,22 +68,23 @@
     }
     .driver-link {
       display: block;
-      margin-top: 10px;
+      margin-top: 12px;
+      text-align: center;
       font-weight: bold;
-      color: red;
-      font-size: 16px;
+      color: #d40000;
       text-decoration: none;
+      font-size: 16px;
     }
-    .logo {
-      width: 120px;
-      margin: 0 auto 20px;
-      display: block;
+    .driver-link:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <img src="file_0000000035b46230a507eae562c28d45.png" alt="Логотип" class="logo" />
+    <h1>
+      <img src="https://bombilataxi.github.io/Bombila/file_00000000c1b06230bc506bd1947cda6f.png" alt="Логотип">
+    </h1>
     <form id="orderForm">
       <select id="city" required>
         <option value="" disabled selected>Выберите город</option>
@@ -97,7 +99,7 @@
         <option>Пентек</option>
         <option>Тэгу</option>
         <option>Чхонджу</option>
-        <option>Кванджу-Б</option>
+        <option>Кванджу-б</option>
         <option>Асан</option>
         <option>Осан</option>
       </select>
@@ -107,8 +109,8 @@
       <button type="button" onclick="getGeo()">Отправить геолокацию</button>
       <div id="geoStatus" class="message" style="display:none;">Геолокация получена ✅</div>
       <button type="submit">Заказать такси</button>
-      <a href="https://t.me/taxi_orders" class="driver-link">Стать водителем</a>
     </form>
+    <a href="https://t.me/taxi_orders" class="driver-link">Стать водителем</a>
   </div>
 
   <script>
@@ -142,7 +144,6 @@
         location: geo
       };
       tg.sendData(JSON.stringify(data));
-      document.getElementById("geoStatus").style.display = "block";
       setTimeout(() => tg.close(), 2000);
     });
   </script>
