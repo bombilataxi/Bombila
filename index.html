@@ -105,6 +105,7 @@
 
   <script>
     const tg = window.Telegram.WebApp;
+    tg.ready();
     tg.expand();
 
     let geo = null;
@@ -135,19 +136,12 @@
         location: geo
       };
 
-      document.getElementById("confirmMessage").style.display = "block";
       tg.sendData(JSON.stringify(data));
+      document.getElementById("confirmMessage").style.display = "block";
 
       setTimeout(() => {
         tg.close();
       }, 2000);
-    });
-
-    const inputs = document.querySelectorAll('input, select');
-    inputs.forEach(input => {
-      input.addEventListener('focus', () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      });
     });
   </script>
 </body>
