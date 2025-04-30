@@ -48,7 +48,7 @@
       box-sizing: border-box;
     }
     button {
-      background-color: #ffe680; /* мягкий бледно-жёлтый */
+      background-color: #ffe680;
       color: #000;
       font-weight: bold;
       border: none;
@@ -133,6 +133,22 @@
         alert("Ваше устройство не поддерживает геолокацию.");
       }
     }
+
+    // Прокрутка к нужному полю при фокусе
+    document.querySelectorAll('input, select').forEach(el => {
+      el.addEventListener('focus', () => {
+        setTimeout(() => {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
+      });
+    });
+
+    // Закрытие клавиатуры при нажатии вне поля
+    document.body.addEventListener('click', function (e) {
+      if (!e.target.closest('input') && !e.target.closest('select')) {
+        document.activeElement.blur();
+      }
+    });
 
     document.getElementById("orderForm").addEventListener("submit", function (e) {
       e.preventDefault();
