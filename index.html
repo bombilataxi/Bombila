@@ -1,135 +1,169 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Заказ такси — Bombila</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f2f2f2;
-      display: flex;
-      justify-content: center;
-      align-items: start;
-      min-height: 100vh;
-      padding: 20px;
-      box-sizing: border-box;
-    }
-    .container {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      width: 100%;
-      max-width: 400px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      animation: fadein 0.4s ease;
-    }
-    @keyframes fadein {
-      from { opacity: 0; transform: translateY(30px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-      font-size: 22px;
-    }
-    select, input, button {
-      width: 100%;
-      padding: 14px;
-      margin-bottom: 12px;
-      font-size: 16px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
-    }
-    button {
-      background-color: #ffd600;
-      color: #000;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-      transition: transform 0.1s;
-    }
-    button:active {
-      transform: scale(0.97);
-    }
-    .message {
-      text-align: center;
-      font-size: 16px;
-      font-weight: bold;
-      color: green;
-      margin-top: -5px;
-      margin-bottom: 10px;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>Bombila</h1>
-    <form id="orderForm">
-      <select id="city" required>
-        <option value="" disabled selected>Выберите город</option>
-        <option>сеул</option>
-        <option>пусан</option>
-        <option>инчон</option>
-        <option>ансан</option>
-        <option>паран</option>
-        <option>чонан</option>
-        <option>кенджу</option>
-        <option>ансонг</option>
-        <option>пентек</option>
-        <option>тэгу</option>
-        <option>чхонджу</option>
-        <option>кванджу- б</option>
-        <option>асан</option>
-        <option>осан</option>
-      </select>
-      <input type="text" id="from" placeholder="Откуда (улица, район)" required />
-      <input type="text" id="to" placeholder="Куда (адрес назначения)" required />
-      <input type="number" id="price" placeholder="Стоимость поездки (₩)" required />
-      <button type="button" onclick="getGeo()">Отправить геолокацию</button>
-      <div id="geoStatus" class="message" style="display:none;">Геолокация получена ✅</div>
-      <button type="submit">Отправить заказ</button>
-      <div id="confirmMessage" class="message" style="display:none;">Заказ отправлен!</div>
-    </form>
-  </div>
+import logging
+import json
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
+from telegram.ext import (
+    ApplicationBuilder, CommandHandler, MessageHandler,
+    CallbackQueryHandler, ContextTypes, filters
+)
 
-  <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-    let geo = null;
+TOKEN = '7976486101:AAGnlLZT_QYaD62AErfwvAtgjJLf3sKmLqY'
+orders = {}
+active_chats = {}
+drivers = {}
+admin_ids = [1050765006]  # Заменить на свой Telegram ID
 
-    function getGeo() {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((pos) => {
-          geo = {
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude
-          };
-          document.getElementById("geoStatus").style.display = "block";
-        }, () => {
-          alert("Не удалось получить геолокацию.");
-        });
-      } else {
-        alert("Ваше устройство не поддерживает геолокацию.");
-      }
-    }
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-    document.getElementById("orderForm").addEventListener("submit", function (e) {
-      e.preventDefault();
-      const data = {
-        city: document.getElementById("city").value,
-        pickup: document.getElementById("from").value,
-        destination: document.getElementById("to").value,
-        price: document.getElementById("price").value,
-        location: geo
-      };
-      tg.sendData(JSON.stringify(data));
-      document.getElementById("confirmMessage").style.display = "block";
-      setTimeout(() => tg.close(), 2000);
-    });
-  </script>
-</body>
-</html>
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [
+        [InlineKeyboardButton("🚕 Вызвать такси", web_app=WebAppInfo(url="https://bombilataxi.github.io/Bombila/"))],
+        [InlineKeyboardButton("🧑‍✈️ Стать водителем", callback_data="become_driver")]
+    ]
+    await update.message.reply_text("Добро пожаловать в Bombila!", reply_markup=InlineKeyboardMarkup(keyboard))
+
+async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    data = query.data
+
+    if data == "become_driver":
+        cities = ["сеул", "пусан", "инчон", "ансан", "паран", "чонан", "кенджу", "ансонг", "пентек", "тэгу", "чхонджу", "кванджу- б", "асан", "осан"]
+        city_buttons = [[InlineKeyboardButton(city, callback_data=f"reg_{city}")] for city in cities]
+        await query.edit_message_text("Выберите город:", reply_markup=InlineKeyboardMarkup(city_buttons))
+
+    elif data.startswith("reg_"):
+        city = data[4:]
+        drivers[query.from_user.id] = {"city": city, "blocked": False, "busy": False}
+        await query.edit_message_text(f"Вы зарегистрированы как водитель в городе {city}.")
+
+    elif data.startswith("take_"):
+        client_id = int(data[5:])
+        driver_id = query.from_user.id
+
+        if drivers.get(driver_id, {}).get("busy"):
+            await query.answer("У вас уже есть активный заказ.", show_alert=True)
+            return
+
+        order = orders.get(client_id)
+        if not order or order['status'] != 'active':
+            await query.edit_message_text("Этот заказ уже недоступен.")
+            return
+
+        orders[client_id]['status'] = 'taken'
+        orders[client_id]['driver_id'] = driver_id
+        drivers[driver_id]['busy'] = True
+        active_chats[client_id] = driver_id
+        active_chats[driver_id] = client_id
+
+        await context.bot.send_message(client_id, "✅ Ваш заказ исполняется!", reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("✅ Завершить заказ", callback_data=f"complete_{client_id}")]
+        ]))
+        await context.bot.send_message(driver_id, "✅ Вы приняли заказ. Вы можете писать клиенту.")
+        await query.edit_message_text("✅ Вы приняли заказ.")
+
+    elif data.startswith("cancel_"):
+        client_id = int(data[7:])
+        driver_id = active_chats.get(client_id)
+        if driver_id:
+            await context.bot.send_message(driver_id, "❌ Клиент отменил заказ.")
+        orders.pop(client_id, None)
+        active_chats.pop(client_id, None)
+        active_chats.pop(driver_id, None)
+        if driver_id in drivers:
+            drivers[driver_id]['busy'] = False
+        await query.message.edit_text("❌ Заказ отменен.")
+
+    elif data.startswith("complete_"):
+        client_id = int(data[9:])
+        driver_id = active_chats.get(client_id)
+        if driver_id:
+            await context.bot.send_message(driver_id, "✅ Клиент завершил заказ.")
+        orders.pop(client_id, None)
+        active_chats.pop(client_id, None)
+        active_chats.pop(driver_id, None)
+        if driver_id in drivers:
+            drivers[driver_id]['busy'] = False
+            print(f"[ГОТОВО] Водитель {driver_id} теперь свободен")
+        await query.message.edit_text("✅ Заказ завершён.")
+
+async def handle_webapp(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        raw = update.message.web_app_data.data
+        print("[RAW JSON]:", raw)
+        data = json.loads(raw)
+        print("[PARSED JSON]:", data)
+
+        user = update.effective_user
+        city = data.get("city")
+
+        active = [o for o in orders.values() if o.get("user_id") == user.id and o["status"] == "active"]
+        print(f"[ACTIVE ORDERS]: {len(active)}")
+
+        if len(active) >= 2:
+            await update.message.reply_text("❌ У вас уже 2 активных заказа.")
+            return
+
+        print("[НОВЫЙ ЗАКАЗ] Добавлен заказ от пользователя", user.id)
+        orders[user.id] = {
+            "user_id": user.id,
+            "status": "active",
+            "city": city,
+            "pickup": data.get("pickup"),
+            "destination": data.get("destination"),
+            "price": data.get("price"),
+            "location": data.get("location"),
+            "driver_id": None
+        }
+
+        await update.message.reply_text("✅ Ваш заказ размещён!", reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("❌ Отменить заказ", callback_data=f"cancel_{user.id}")]
+        ]))
+
+        msg = f"🚖 Новый заказ!\nГород: {city}\nОткуда: {data.get('pickup')}\nКуда: {data.get('destination')}\nЦена: {data.get('price')}₩"
+        if data.get("location"):
+            loc = data["location"]
+            msg += f"\n[Геолокация](https://maps.google.com/?q={loc['latitude']},{loc['longitude']})"
+
+        keyboard = [[InlineKeyboardButton("✅ Взять заказ", callback_data=f"take_{user.id}")]]
+        for driver_id, info in drivers.items():
+            print(f"[ПРОВЕРКА ВОДИТЕЛЯ] {driver_id}: city={info['city']}, blocked={info['blocked']}, busy={info['busy']}")
+            if not info['blocked'] and not info['busy'] and info['city'].strip().lower() == city.strip().lower():
+                await context.bot.send_message(driver_id, msg, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(keyboard))
+                print(f"[ОТПРАВЛЕНО] Заказ отправлен водителю {driver_id}")
+
+    except Exception as e:
+        print("[ОШИБКА В ЗАКАЗЕ]", e)
+        await update.message.reply_text("❌ Ошибка при отправке заказа.")
+
+async def forward(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    sender = update.effective_user.id
+    if sender in active_chats:
+        receiver = active_chats[sender]
+        if update.message.location:
+            await context.bot.send_location(receiver, update.message.location.latitude, update.message.location.longitude)
+        elif update.message.text:
+            await context.bot.send_message(receiver, update.message.text)
+
+async def admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id not in admin_ids:
+        return await update.message.reply_text("⛔ Нет доступа")
+
+    txt = "\n".join([f"#{k} — {v['pickup']} → {v['destination']} ({v['city']})" for k, v in orders.items() if v['status'] == 'active']) or "Нет активных заказов."
+    await update.message.reply_text("📦 Активные заказы:\n" + txt)
+
+    txt2 = "\n".join([f"{uid} — {v['city']} {'🚫' if v['blocked'] else '✅'}" for uid, v in drivers.items()]) or "Нет водителей."
+    await update.message.reply_text("🚗 Водители:\n" + txt2)
+
+def main():
+    app = ApplicationBuilder().token(TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("admin", admin))
+    app.add_handler(CallbackQueryHandler(handle_buttons))
+    app.add_handler(MessageHandler(filters.StatusUpdate.WEB_APP_DATA, handle_webapp))
+    app.add_handler(MessageHandler(filters.LOCATION | filters.TEXT, forward))
+    print("Бот запущен")
+    app.run_polling()
+
+if __name__ == "__main__":
+    main()
