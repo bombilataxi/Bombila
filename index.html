@@ -2,30 +2,26 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Test WebApp</title>
+  <title>WebApp Test</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
-<body>
-  <h2>Тестовая отправка заказа</h2>
-  <button onclick="sendOrder()">Отправить заказ</button>
+<body style="font-family:sans-serif;text-align:center;padding:30px">
+  <h2>Тест WebApp</h2>
+  <button onclick="sendTest()">Отправить заказ</button>
 
   <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    function sendOrder() {
-      const order = {
+    function sendTest() {
+      const data = {
         city: "пусан",
-        pickup: "улица А",
-        destination: "улица Б",
-        price: "5000",
-        location: {
-          latitude: 37.5665,
-          longitude: 126.9780
-        }
+        pickup: "Дом",
+        destination: "Работа",
+        price: "10000"
       };
-      tg.sendData(JSON.stringify(order));
-      alert("Данные отправлены в бота");
+      tg.sendData(JSON.stringify(data));
+      alert("Данные отправлены");
       setTimeout(() => tg.close(), 1500);
     }
   </script>
