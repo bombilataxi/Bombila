@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Заказ такси</title>
+  <title>Заказ такси — Bombila</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body {
@@ -20,20 +20,19 @@
     .container {
       background: white;
       padding: 20px;
-      border-radius: 16px;
+      border-radius: 12px;
       width: 100%;
-      max-width: 420px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      max-width: 400px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      animation: fadein 0.4s ease;
+      text-align: center;
     }
-    .logo {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 12px;
+    @keyframes fadein {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-    .logo img {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
+    h1 {
+      margin-bottom: 20px;
     }
     select, input, button {
       width: 100%;
@@ -44,16 +43,19 @@
       border: 1px solid #ccc;
       box-sizing: border-box;
     }
+    select {
+      font-weight: bold;
+    }
     button {
-      background-color: #0088cc;
-      color: #fff;
+      background-color: #007bff;
+      color: white;
       font-weight: bold;
       border: none;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: transform 0.1s;
     }
     button:active {
-      background-color: #0072aa;
+      transform: scale(0.97);
     }
     .message {
       text-align: center;
@@ -63,39 +65,41 @@
       margin-top: -5px;
       margin-bottom: 10px;
     }
-    .link-driver {
-      text-align: center;
+    .driver-link {
+      display: block;
       margin-top: 10px;
-    }
-    .link-driver a {
       font-weight: bold;
-      color: #d91f00;
+      color: red;
+      font-size: 16px;
       text-decoration: none;
+    }
+    .logo {
+      width: 120px;
+      margin: 0 auto 20px;
+      display: block;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="logo">
-      <img src="https://bombilataxi.github.io/Bombila/logo_round.png" alt="Логотип">
-    </div>
+    <img src="file_0000000035b46230a507eae562c28d45.png" alt="Логотип" class="logo" />
     <form id="orderForm">
       <select id="city" required>
         <option value="" disabled selected>Выберите город</option>
-        <option>сеул</option>
-        <option>пусан</option>
-        <option>инчон</option>
-        <option>ансан</option>
-        <option>паран</option>
-        <option>чонан</option>
-        <option>кенджу</option>
-        <option>ансонг</option>
-        <option>пентек</option>
-        <option>тэгу</option>
-        <option>чхонджу</option>
-        <option>кванджу- б</option>
-        <option>асан</option>
-        <option>осан</option>
+        <option>Сеул</option>
+        <option>Пусан</option>
+        <option>Инчон</option>
+        <option>Ансан</option>
+        <option>Паран</option>
+        <option>Чонан</option>
+        <option>Кенджу</option>
+        <option>Ансонг</option>
+        <option>Пентек</option>
+        <option>Тэгу</option>
+        <option>Чхонджу</option>
+        <option>Кванджу-Б</option>
+        <option>Асан</option>
+        <option>Осан</option>
       </select>
       <input type="text" id="from" placeholder="Откуда забирать?" required />
       <input type="text" id="to" placeholder="Куда поедете?" required />
@@ -103,11 +107,8 @@
       <button type="button" onclick="getGeo()">Отправить геолокацию</button>
       <div id="geoStatus" class="message" style="display:none;">Геолокация получена ✅</div>
       <button type="submit">Заказать такси</button>
-      <div id="confirmMessage" class="message" style="display:none;">Заказ отправлен!</div>
+      <a href="https://t.me/taxi_orders" class="driver-link">Стать водителем</a>
     </form>
-    <div class="link-driver">
-      <a href="https://t.me/taxi_orders" target="_blank">Стать водителем</a>
-    </div>
   </div>
 
   <script>
@@ -141,7 +142,7 @@
         location: geo
       };
       tg.sendData(JSON.stringify(data));
-      document.getElementById("confirmMessage").style.display = "block";
+      document.getElementById("geoStatus").style.display = "block";
       setTimeout(() => tg.close(), 2000);
     });
   </script>
