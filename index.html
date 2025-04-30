@@ -1,29 +1,133 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>WebApp Test</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Заказ такси — Bombila</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      display: flex;
+      justify-content: center;
+      align-items: start;
+      min-height: 100vh;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      animation: fadein 0.4s ease;
+    }
+    @keyframes fadein {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 22px;
+    }
+    select, input, button {
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 12px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #ffd600;
+      color: #000;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+    button:active {
+      transform: scale(0.97);
+    }
+    .message {
+      text-align: center;
+      font-size: 16px;
+      font-weight: bold;
+      color: green;
+      margin-top: -5px;
+      margin-bottom: 10px;
+    }
+  </style>
 </head>
-<body style="font-family:sans-serif;text-align:center;padding:30px">
-  <h2>Тест WebApp</h2>
-  <button onclick="sendTest()">Отправить заказ</button>
+<body>
+  <div class="container">
+    <h1>Bombila</h1>
+    <form id="orderForm">
+      <select id="city" required>
+        <option value="" disabled selected>Выберите город</option>
+        <option>Сеул</option>
+        <option>Пусан</option>
+        <option>Инчон</option>
+        <option>Ансан</option>
+        <option>Паран</option>
+        <option>Кванджу</option>
+        <option>Кенджу</option>
+        <option>Чонан</option>
+        <option>Пентек</option>
+        <option>Тэгу</option>
+        <option>Чхонджу</option>
+        <option>Ансонг</option>
+      </select>
+      <input type="text" id="from" placeholder="Откуда (улица, район)" required />
+      <input type="text" id="to" placeholder="Куда (адрес назначения)" required />
+      <input type="number" id="price" placeholder="Стоимость поездки (₩)" required />
+      <button type="button" onclick="getGeo()">Отправить геолокацию</button>
+      <div id="geoStatus" class="message" style="display:none;">Геолокация получена ✅</div>
+      <button type="submit">Отправить заказ</button>
+      <div id="confirmMessage" class="message" style="display:none;">Заказ отправлен!</div>
+    </form>
+  </div>
 
   <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
+    let geo = null;
 
-    function sendTest() {
+    function getGeo() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((pos) => {
+          geo = {
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude
+          };
+          document.getElementById("geoStatus").style.display = "block";
+        }, () => {
+          alert("Не удалось получить геолокацию.");
+        });
+      } else {
+        alert("Ваше устройство не поддерживает геолокацию.");
+      }
+    }
+
+    document.getElementById("orderForm").addEventListener("submit", function (e) {
+      e.preventDefault();
       const data = {
-        city: "пусан",
-        pickup: "Дом",
-        destination: "Работа",
-        price: "10000"
+        city: document.getElementById("city").value,
+        pickup: document.getElementById("from").value,
+        destination: document.getElementById("to").value,
+        price: document.getElementById("price").value,
+        location: geo
       };
       tg.sendData(JSON.stringify(data));
-      alert("Данные отправлены");
-      setTimeout(() => tg.close(), 1500);
-    }
+      document.getElementById("confirmMessage").style.display = "block";
+      setTimeout(() => tg.close(), 2000);
+    });
   </script>
 </body>
 </html>
